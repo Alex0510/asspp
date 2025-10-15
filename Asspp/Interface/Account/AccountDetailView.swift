@@ -8,6 +8,13 @@
 import ApplePackage
 import SwiftUI
 
+#if canImport(UIKit)
+    import UIKit
+#endif
+#if canImport(AppKit) && !canImport(UIKit)
+    import AppKit
+#endif
+
 struct AccountDetailView: View {
     let accountId: AppStore.UserAccount.ID
 
@@ -22,15 +29,11 @@ struct AccountDetailView: View {
     @State var rotatingHint = ""
 
     var body: some View {
-        List {
+        FormOnTahoeList {
             Section {
-                if vm.demoMode {
-                    Text("88888888888")
-                        .redacted(reason: .placeholder)
-                } else {
-                    Text(account?.account.email ?? "")
-                        .onTapGesture { UIPasteboard.general.string = account?.account.email }
-                }
+                Text(account?.account.email ?? "")
+                    .onTapGesture { copyToClipboard(account?.account.email) }
+                    .redacted(reason: .placeholder, isEnabled: vm.demoMode)
             } header: {
                 Text("Apple ID")
             } footer: {
@@ -38,21 +41,17 @@ struct AccountDetailView: View {
             }
             Section {
                 Text("\(account?.account.store ?? "") - \(ApplePackage.Configuration.countryCode(for: account?.account.store ?? "") ?? "Unknown")")
-                    .onTapGesture { UIPasteboard.general.string = account?.account.email }
+                    .onTapGesture { copyToClipboard(account?.account.email) }
             } header: {
                 Text("Country Code")
             } footer: {
                 Text("App Store requires this country code to identify your package region.")
             }
             Section {
-                if vm.demoMode {
-                    Text("88888888888")
-                        .redacted(reason: .placeholder)
-                } else {
-                    Text(account?.account.directoryServicesIdentifier ?? "")
-                        .font(.system(.body, design: .monospaced))
-                        .onTapGesture { UIPasteboard.general.string = account?.account.email }
-                }
+                Text(account?.account.directoryServicesIdentifier ?? "")
+                    .font(.system(.body, design: .monospaced))
+                    .onTapGesture { copyToClipboard(account?.account.email) }
+                    .redacted(reason: .placeholder, isEnabled: vm.demoMode)
             } header: {
                 Text("Directory Services ID")
             } footer: {
@@ -105,5 +104,16 @@ struct AccountDetailView: View {
                 }
             }
         }
+    }
+
+    func copyToClipboard(_ text: String?) {
+        guard let text, !text.isEmpty else { return }
+        #if canImport(UIKit)
+            UIPasteboard.general.string = text
+        #elseif canImport(AppKit) && !canImport(UIKit)
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setString(text, forType: .string)
+        #endif
     }
 }

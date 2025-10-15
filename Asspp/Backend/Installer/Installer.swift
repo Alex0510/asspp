@@ -7,7 +7,9 @@
 
 import ApplePackage
 import Logging
-import UIKit
+#if canImport(UIKit)
+    import UIKit
+#endif
 import Vapor
 
 class Installer: Identifiable, ObservableObject, @unchecked Sendable {
@@ -68,7 +70,7 @@ class Installer: Identifiable, ObservableObject, @unchecked Sendable {
 
                 let result = try await req.fileio.asyncStreamFile(
                     at: packagePath.path,
-                    chunkSize: 64 * 1024,
+                    chunkSize: 64 * 1024
                 ) { result in
                     await MainActor.run {
                         self.status = .completed(result)
@@ -120,7 +122,7 @@ class Installer: Identifiable, ObservableObject, @unchecked Sendable {
         app.get("*") { req in
             try await req.fileio.asyncStreamFile(
                 at: certificateAtPath,
-                chunkSize: 64 * 1024,
+                chunkSize: 64 * 1024
             )
         }
 

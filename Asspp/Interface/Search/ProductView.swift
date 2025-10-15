@@ -37,8 +37,7 @@ struct ProductView: View {
     @State var licenseHint: String = ""
     @State var acquiringLicense = false
     @State var showLicenseAlert = false
-    @State var hint: String = ""
-    @State var hintColor: Color?
+    @State var hint: Hint?
 
     let sizeFormatter: ByteCountFormatter = {
         let formatter = ByteCountFormatter()
@@ -55,7 +54,7 @@ struct ProductView: View {
     }
 
     var body: some View {
-        List {
+        FormOnTahoeList {
             accountSelector
             buttons
             packageHeader
@@ -78,9 +77,11 @@ struct ProductView: View {
         .navigationTitle("Select Account")
         .alert("License Required", isPresented: $showLicenseAlert) {
             var confirmRole: ButtonRole?
-            if #available(iOS 26.0, *) {
-                confirmRole = .confirm
-            }
+            #if compiler(>=6.2)
+                if #available(iOS 26.0, macOS 26.0, *) {
+                    confirmRole = .confirm
+                }
+            #endif
 
             return Group {
                 Button("Acquire License", role: confirmRole) {
@@ -98,31 +99,21 @@ struct ProductView: View {
             NavigationLink {
                 ProductHistoryView(vm: AppPackageArchive(accountID: selection, region: region, package: archive.package))
             } label: {
-                HStack {
-                    Text("Version \(archive.package.software.version)")
-                    Spacer()
-                    if let date = archive.releaseDate {
-                        Text(date.formatted(.relative(presentation: .numeric)))
-                            .foregroundStyle(.secondary)
-                    }
+                let badgeText = archive.releaseDate.flatMap { date in
+                    Text(date.formatted(.relative(presentation: .numeric)))
                 }
+
+                Text("Version \(archive.package.software.version)")
+                    .badge(badgeText)
             }
 
             if let formattedSize {
-                HStack {
-                    Text("Size")
-                    Spacer()
-                    Text(formattedSize)
-                        .foregroundStyle(.secondary)
-                }
+                Text("Size")
+                    .badge(formattedSize)
             }
 
-            HStack {
-                Text("Compatibility")
-                Spacer()
-                Text("\(archive.package.software.minimumOsVersion)+")
-                    .foregroundStyle(.secondary)
-            }
+            Text("Compatibility")
+                .badge("\(archive.package.software.minimumOsVersion)+")
         } header: {
             Text("Package")
         }
@@ -161,18 +152,14 @@ struct ProductView: View {
 
     var accountSelector: some View {
         Section {
-            if vm.demoMode {
-                Text("Demo Mode Redacted")
-                    .redacted(reason: .placeholder)
-            } else {
-                Picker("Account", selection: $selection) {
-                    ForEach(eligibleAccounts) { account in
-                        Text(account.account.email)
-                            .id(account.id)
-                    }
+            Picker("Account", selection: $selection) {
+                ForEach(eligibleAccounts) { account in
+                    Text(account.account.email)
+                        .id(account.id)
                 }
-                .pickerStyle(.menu)
             }
+            .pickerStyle(.menu)
+            .redacted(reason: .placeholder, isEnabled: vm.demoMode)
         } header: {
             Text("Account")
         } footer: {
@@ -183,6 +170,10 @@ struct ProductView: View {
     var buttons: some View {
         Section {
             if let req = dvm.downloadRequest(forArchive: archive.package) {
+                // We intentionally don't use `navigationDestination(isPresented:destination:)` here on iOS 16+ & macOS 13+.
+                // To use it, we'd need to move the modifier out of this List and onto the enclosing `NavigationStack`,
+                // which would require intrusive changes at the root. If we drop the auto-show-on-download behaviour though,
+                // adopting `navigationDestination` would be feasible.
                 NavigationLink(destination: PackageView(pkg: req), isActive: $showDownloadPage) {
                     Text("Show Download")
                 }
@@ -196,11 +187,11 @@ struct ProductView: View {
         } header: {
             Text("Download")
         } footer: {
-            if hint.isEmpty {
-                Text("Package can be installed later in download page.")
+            if let hint {
+                Text(hint.message)
+                    .foregroundColor(hint.color)
             } else {
-                Text(hint)
-                    .foregroundColor(hintColor)
+                Text("Package can be installed later in download page.")
             }
         }
     }
@@ -213,8 +204,7 @@ struct ProductView: View {
                 try await dvm.startDownload(for: archive.package, accountID: account.id)
                 await MainActor.run {
                     obtainDownloadURL = false
-                    hint = String(localized: "Download Requested")
-                    hintColor = nil
+                    hint = Hint(message: String(localized: "Download Requested"), color: nil)
                     showDownloadPage = true
                 }
             } catch ApplePackageError.licenseRequired where archive.package.software.price == 0 && !acquiringLicense {
@@ -225,8 +215,7 @@ struct ProductView: View {
             } catch {
                 DispatchQueue.main.async {
                     obtainDownloadURL = false
-                    hint = String(localized: "Unable to retrieve download url, please try again later.") + "\n" + error.localizedDescription
-                    hintColor = .red
+                    hint = Hint(message: String(localized: "Unable to retrieve download url, please try again later.") + "\n" + error.localizedDescription, color: .red)
                 }
             }
         }

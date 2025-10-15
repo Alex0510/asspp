@@ -6,7 +6,7 @@
 
 ## 👀 概览
 
-![截图](../../../Resources/Screenshots/Screenshot-0.png)
+![截图](../../../Resources/Screenshots/README_PREVIEW.png)
 
 ## 🌟 主要功能
 
@@ -46,7 +46,10 @@
 
 ## 🚀 快速上手
 
-前往 [Releases](https://github.com/Lakr233/Asspp/releases) 页面下载最新版本。
+- 前往 [Releases](https://github.com/Lakr233/Asspp/releases) 页面下载最新版本。
+- 或者在 [SideStore](https://sidestore.io) 中添加源
+
+  `https://raw.githubusercontent.com/Lakr233/Asspp/refs/heads/main/Resources/Repos/sidestore.json`
 
 ## 📋 已构建的包
 

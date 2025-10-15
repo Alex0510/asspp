@@ -33,19 +33,27 @@ struct SearchView: View {
     }
 
     var body: some View {
-        if #available(iOS 26, *) {
+        #if os(iOS)
+            if #available(iOS 16, *) {
+                // Temporary workaround for the auto-pop issue on iOS 16 when using NavigationView
+                // reference: https://stackoverflow.com/questions/66559814/swiftui-navigationlink-pops-out-by-itself#comment136786758_77588007
+                NavigationStack {
+                    if #available(iOS 26.0, *) {
+                        modernContent
+                    } else {
+                        legacyContent
+                    }
+                }
+            } else {
+                NavigationView {
+                    legacyContent
+                }
+            }
+        #else
             NavigationStack {
-                modernContent
+                legacyContent
             }
-        } else {
-            NavigationView {
-                content
-                    .searchable(text: $searchKey, prompt: "Keyword") {}
-                    .onSubmit(of: .search) { search() }
-                    .navigationTitle("Search - \(searchRegion.uppercased())")
-                    .toolbar { tools }
-            }
-        }
+        #endif
     }
 
     var searchTypePicker: some View {
@@ -56,7 +64,7 @@ struct SearchView: View {
         } label: {
             Label("Type", systemImage: searchType.iconName)
         }
-        .onChange(of: searchType) { _ in
+        .onChangeCompat(of: searchType) { _ in
             searchResult = []
         }
     }
@@ -66,7 +74,7 @@ struct SearchView: View {
     }
 
     @ViewBuilder
-    var searchRegionView: some View {
+    func searchRegionView(isAllRegionsWrappedInMenu: Bool = true) -> some View {
         Group {
             if !possibleRegionKeys.isEmpty {
                 buildPickView(
@@ -74,14 +82,23 @@ struct SearchView: View {
                 ) {
                     Label("Available Regions", systemImage: "checkmark.seal")
                 }
-                Menu {
+                if isAllRegionsWrappedInMenu {
+                    Menu {
+                        buildPickView(
+                            for: regionKeys
+                        ) {
+                            EmptyView()
+                        }
+                    } label: {
+                        Label("All Regions", systemImage: "globe")
+                    }
+                } else {
+                    // Wrapping in Menu on macOS will cause an addition hover to show all the regions
                     buildPickView(
                         for: regionKeys
                     ) {
-                        EmptyView()
+                        Label("All Regions", systemImage: "globe")
                     }
-                } label: {
-                    Label("All Regions", systemImage: "globe")
                 }
             } else {
                 // Reduce one interaction
@@ -92,7 +109,7 @@ struct SearchView: View {
                 }
             }
         }
-        .onChange(of: searchRegion) { _ in
+        .onChangeCompat(of: searchRegion) { _ in
             searchResult = []
         }
     }
@@ -104,7 +121,11 @@ struct SearchView: View {
                 searchTypePicker
                     .pickerStyle(.menu)
                 Divider()
-                searchRegionView
+                #if os(iOS)
+                    searchRegionView()
+                #else
+                    searchRegionView(isAllRegionsWrappedInMenu: false)
+                #endif
             } label: {
                 Image(systemName: "ellipsis.circle")
             }
@@ -112,7 +133,7 @@ struct SearchView: View {
     }
 
     var content: some View {
-        List {
+        FormOnTahoeList {
             if searching || !searchResult.isEmpty {
                 Section(searching ? "Searching..." : "\(searchResult.count) Results") {
                     ForEach(searchResult) { item in
@@ -173,69 +194,73 @@ struct SearchView: View {
     }
 }
 
-// MARK: - Liquid Glass
-
-@available(iOS 26.0, *)
 extension SearchView {
-    var modernContent: some View {
+    var legacyContent: some View {
         content
-            .searchable(text: $searchKey, placement: searchablePlacement, prompt: "Keyword")
+            .searchable(text: $searchKey, prompt: "Keyword") {}
             .onSubmit(of: .search) { search() }
-            .toolbarVisibility(navigationBarVisibility, for: .navigationBar)
-            .navigationTitle(Text("Search - \(searchRegion.uppercased())"))
-            .toolbar {
-                if navigationBarVisibility != .hidden {
-                    tools
-                }
-            }
-            .safeAreaBar(edge: .top) {
-                if navigationBarVisibility == .hidden {
-                    HStack {
-                        searchTypePicker
-                            .buttonStyle(.glass)
-                        Spacer()
-
-                        Menu {
-                            searchRegionView
-                        } label: {
-                            Label(searchRegion, systemImage: "globe")
-                        }
-                        .menuIndicator(.visible)
-                        .buttonStyle(.glass)
-                    }
-                    .padding([.bottom, .horizontal])
-                }
-            }
-            .animation(.spring, value: searchResult)
-            .animation(.spring, value: searching)
-    }
-
-    var titleDisplayMode: NavigationBarItem.TitleDisplayMode {
-        if #available(iOS 26.0, *) {
-            .inline // weird animation when using large title
-        } else {
-            .automatic
-        }
-    }
-
-    var navigationBarVisibility: Visibility {
-        switch horizontalSizeClass {
-        case .compact:
-            .hidden
-        default:
-            .automatic
-        }
-    }
-
-    var searchablePlacement: SearchFieldPlacement {
-        switch horizontalSizeClass {
-        case .compact:
-            .automatic
-        default:
-            .toolbar
-        }
+            .navigationTitle("Search - \(searchRegion.uppercased())")
+            .toolbar { tools }
     }
 }
+
+// MARK: - Liquid Glass
+
+#if os(iOS)
+    @available(iOS 26.0, *)
+    extension SearchView {
+        var modernContent: some View {
+            content
+                .searchable(text: $searchKey, placement: searchablePlacement, prompt: "Keyword")
+                .onSubmit(of: .search) { search() }
+                .toolbarVisibility(navigationBarVisibility, for: .navigationBar)
+                .navigationTitle(Text("Search - \(searchRegion.uppercased())"))
+                .toolbar {
+                    if navigationBarVisibility != .hidden {
+                        tools
+                    }
+                }
+                .safeAreaBar(edge: .top) {
+                    if navigationBarVisibility == .hidden {
+                        HStack {
+                            searchTypePicker
+                                .buttonStyle(.glass)
+                            Spacer()
+
+                            Menu {
+                                searchRegionView()
+                            } label: {
+                                Label(searchRegion, systemImage: "globe")
+                            }
+                            .menuIndicator(.visible)
+                            .buttonStyle(.glass)
+                        }
+                        .padding([.bottom, .horizontal])
+                    }
+                }
+                .animation(.spring, value: searchResult)
+                .animation(.spring, value: searching)
+        }
+
+        var navigationBarVisibility: Visibility {
+            switch horizontalSizeClass {
+            case .compact:
+                .hidden
+            default:
+                .automatic
+            }
+        }
+
+        var searchablePlacement: SearchFieldPlacement {
+            switch horizontalSizeClass {
+            case .compact:
+                .automatic
+            default:
+                .toolbar
+            }
+        }
+    }
+#endif
 
 #if DEBUG
     private typealias AppPackages = [AppStore.AppPackage]

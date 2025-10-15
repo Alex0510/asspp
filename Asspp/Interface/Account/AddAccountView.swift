@@ -23,22 +23,31 @@ struct AddAccountView: View {
     @State var openProgress: Bool = false
 
     var body: some View {
-        List {
+        FormOnTahoeList {
             Section {
                 TextField("Email (Apple ID)", text: $email)
+                #if os(iOS)
                     .disableAutocorrection(true)
                     .autocapitalization(.none)
                     .textContentType(.emailAddress)
                     .keyboardType(.emailAddress)
+                #endif
                 if isPasswordHidden {
                     SecureField("Password", text: $password)
+                    #if os(iOS)
                         .textContentType(.password)
+                    #endif
                 } else {
-                    TextField("Password", text: $password)
-                        .disableAutocorrection(true)
-                        .autocapitalization(.none)
-                        .textContentType(.password)
-                        .font(.system(.footnote, design: .monospaced))
+                    TextField(text: $password) {
+                        Text("Password")
+                            .font(.body)
+                    }
+                    #if os(iOS)
+                    .disableAutocorrection(true)
+                    .autocapitalization(.none)
+                    .textContentType(.password)
+                    #endif
+                    .font(.body.monospaced())
                 }
             } header: {
                 HStack {
@@ -55,9 +64,11 @@ struct AddAccountView: View {
             if codeRequired {
                 Section {
                     TextField("2FA Code (Optional)", text: $code)
+                    #if os(iOS)
                         .disableAutocorrection(true)
                         .autocapitalization(.none)
                         .keyboardType(.numberPad)
+                    #endif
                 } header: {
                     Text("2FA Code")
                 } footer: {
@@ -69,6 +80,9 @@ struct AddAccountView: View {
                 if openProgress {
                     ForEach([UUID()], id: \.self) { _ in
                         ProgressView()
+                        #if os(macOS)
+                            .controlSize(.small)
+                        #endif
                     }
                 } else {
                     Button("Authenticate") {
@@ -89,8 +103,10 @@ struct AddAccountView: View {
             }
         }
         .animation(.spring, value: codeRequired)
-        .listStyle(.insetGrouped)
-        .navigationTitle("Add Account")
+        #if os(iOS)
+            .listStyle(.insetGrouped)
+        #endif
+            .navigationTitle("Add Account")
     }
 
     func authenticate() {

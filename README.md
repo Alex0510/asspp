@@ -8,7 +8,7 @@ For a command-line or library version of Asspp, check out [ApplePackage](https:/
 
 ## 👀 Preview
 
-![Screenshot](./Resources/Screenshots/Screenshot-0.png)
+![Preview](./Resources/Screenshots/README_PREVIEW.png)
 
 ## 🌟 Key Features
 
@@ -48,7 +48,10 @@ For a command-line or library version of Asspp, check out [ApplePackage](https:/
 
 ## 🚀 Usage
 
-Download the latest release from [Releases](https://github.com/Lakr233/Asspp/releases).
+- Download the latest release from [Releases](https://github.com/Lakr233/Asspp/releases).
+- Or add this source in [SideStore](https://sidestore.io)
+
+  `https://raw.githubusercontent.com/Lakr233/Asspp/refs/heads/main/Resources/Repos/sidestore.json`
 
 ## 📋 Prebuilt Package
 

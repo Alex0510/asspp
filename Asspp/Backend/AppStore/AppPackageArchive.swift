@@ -110,6 +110,25 @@ class AppPackageArchive: ObservableObject {
             await MainActor.run { self.loading = false }
         }
     }
+
+    func populateVersionItem(for versionID: String) {
+        guard let accountIdentifier, !loading, versionIdentifiers.contains(versionID), versionItems[versionID] == nil else { return }
+        loading = true
+        error = nil
+
+        Task.detached {
+            do {
+                let app = await self.package.software
+                let metadata = try await AppStore.this.withAccount(id: accountIdentifier) { userAccount in
+                    try await VersionLookup.getVersionMetadata(account: &userAccount.account, app: app, versionID: versionID)
+                }
+                await MainActor.run { self.versionItems[versionID] = metadata }
+            } catch {
+                await MainActor.run { self.error = error.localizedDescription }
+            }
+            await MainActor.run { self.loading = false }
+        }
+    }
 }
 
 @MainActor
