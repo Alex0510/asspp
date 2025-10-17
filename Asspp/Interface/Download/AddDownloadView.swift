@@ -11,6 +11,199 @@ import NIO
 import NIOHTTP1
 import SwiftUI
 
+// 将复杂的部分提取为子视图
+struct BundleIDSection: View {
+    @Binding var bundleID: String
+    @Binding var searchType: EntityType
+    @Binding var isLoadingVersions: Bool
+    let onFetchVersions: () -> Void
+    let isAccountAvailable: Bool
+
+    @FocusState var searchKeyFocused: Bool
+
+    var body: some View {
+        Section {
+            TextField("Bundle ID", text: $bundleID)
+            #if os(iOS)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.none)
+            #endif
+                .focused($searchKeyFocused)
+            Picker("EntityType", selection: $searchType) {
+                ForEach(EntityType.allCases, id: \.self) { type in
+                    Text(type.rawValue)
+                        .tag(type)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            HStack {
+                Spacer()
+                Button(action: onFetchVersions) {
+                    if isLoadingVersions {
+                        HStack {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                            Text("查询中...")
+                        }
+                    } else {
+                        Text("查询历史版本")
+                    }
+                }
+                .disabled(bundleID.isEmpty || isLoadingVersions || !isAccountAvailable)
+                .buttonStyle(.borderedProminent)
+                Spacer()
+            }
+            .padding(.vertical, 8)
+        } header: {
+            Text("Bundle ID")
+        } footer: {
+            Text("输入应用的Bundle ID来查询可下载的历史版本。对于已下架的应用，此功能特别有用。")
+        }
+    }
+}
+
+struct VersionSelectionSection: View {
+    @Binding var availableVersions: [OffAppVersion]
+    @Binding var selectedVersion: OffAppVersion?
+    @Binding var manualVersionId: String
+    @Binding var showManualInput: Bool
+
+    var body: some View {
+        Section {
+            HStack {
+                Text("选择版本")
+                    .font(.headline)
+                Spacer()
+                Button(showManualInput ? "选择版本" : "手动输入") {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showManualInput.toggle()
+                    }
+                }
+                .font(.caption)
+            }
+
+            if !showManualInput {
+                versionPicker
+            } else {
+                manualInputView
+            }
+        } header: {
+            Text("版本选择")
+        } footer: {
+            if !availableVersions.isEmpty {
+                Text("找到 \(availableVersions.count) 个历史版本")
+            } else if showManualInput {
+                Text("手动输入版本ID进行下载")
+            }
+        }
+    }
+
+    private var versionPicker: some View {
+        VStack {
+            Picker("选择版本", selection: Binding(
+                get: { self.selectedVersion?.versionId ?? "" },
+                set: { id in
+                    self.selectedVersion = self.availableVersions.first(where: { $0.versionId == id })
+                }
+            )) {
+                Text("请选择版本").tag("" as String)
+                ForEach(availableVersions, id: \.versionId) { version in
+                    Text("\(version.versionString) (\(version.releaseDate))")
+                        .tag(version.versionId)
+                }
+            }
+            .pickerStyle(.menu)
+
+            if let selectedVersion = selectedVersion {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("版本ID: \(selectedVersion.versionId)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    if let releaseNotes = selectedVersion.releaseNotes {
+                        Text("更新内容: \(releaseNotes)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .lineLimit(3)
+                    }
+                }
+                .padding(.top, 4)
+            }
+        }
+    }
+
+    private var manualInputView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("手动输入版本ID")
+                .font(.subheadline)
+                .fontWeight(.medium)
+
+            TextField("输入版本ID（数字）", text: $manualVersionId)
+            #if os(iOS)
+                .keyboardType(.numberPad)
+            #endif
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+
+            Text("版本ID可以从第三方网站或历史版本列表中获取")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
+struct AccountSection: View {
+    @Binding var selection: AppStore.UserAccount.ID
+    @ObservedObject var avm: AppStore
+    let isDemoMode: Bool
+
+    var body: some View {
+        Section {
+            Picker("Account", selection: $selection) {
+                ForEach(avm.accounts) { account in
+                    Text(account.account.email)
+                        .id(account.id)
+                }
+            }
+            .pickerStyle(.menu)
+            .onAppear { selection = avm.accounts.first?.id ?? .init() }
+            #if os(iOS)
+                .redacted(reason: .placeholder, isEnabled: isDemoMode)
+            #else
+                .redacted(reason: isDemoMode ? .placeholder : [])
+            #endif
+        } header: {
+            Text("Account")
+        } footer: {
+            Text("Select an account to download this app")
+        }
+    }
+}
+
+struct DownloadButtonSection: View {
+    @Binding var obtainDownloadURL: Bool
+    @Binding var hint: String
+    let bundleID: String
+    let account: AppStore.UserAccount?
+    let onStartDownload: () -> Void
+
+    var body: some View {
+        Section {
+            Button(obtainDownloadURL ? "Communicating with Apple..." : "Request Download") {
+                onStartDownload()
+            }
+            .disabled(bundleID.isEmpty || obtainDownloadURL || account == nil)
+        } footer: {
+            if hint.isEmpty {
+                Text("The package can be installed later from the Downloads page.")
+            } else {
+                Text(hint)
+                    .foregroundStyle(.red)
+            }
+        }
+    }
+}
+
 struct AddDownloadView: View {
     @State var bundleID: String = ""
     @State var searchType: EntityType = .iPhone
@@ -38,151 +231,37 @@ struct AddDownloadView: View {
 
     var body: some View {
         FormOnTahoeList {
-            Section {
-                TextField("Bundle ID", text: $bundleID)
-                #if os(iOS)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.none)
-                #endif
-                    .focused($searchKeyFocused)
-                    .onSubmit { startDownload() }
-                Picker("EntityType", selection: $searchType) {
-                    ForEach(EntityType.allCases, id: \.self) { type in
-                        Text(type.rawValue)
-                            .tag(type)
-                    }
-                }
-                .pickerStyle(.segmented)
+            BundleIDSection(
+                bundleID: $bundleID,
+                searchType: $searchType,
+                isLoadingVersions: $isLoadingVersions,
+                onFetchVersions: fetchAppVersions,
+                isAccountAvailable: account != nil,
+                searchKeyFocused: _searchKeyFocused
+            )
 
-                // 添加查询版本按钮
-                HStack {
-                    Spacer()
-                    Button(action: {
-                        fetchAppVersions()
-                    }) {
-                        if isLoadingVersions {
-                            HStack {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                                Text("查询中...")
-                            }
-                        } else {
-                            Text("查询历史版本")
-                        }
-                    }
-                    .disabled(bundleID.isEmpty || isLoadingVersions || account == nil)
-                    .buttonStyle(.borderedProminent)
-                    Spacer()
-                }
-                .padding(.vertical, 8)
-            } header: {
-                Text("Bundle ID")
-            } footer: {
-                Text("输入应用的Bundle ID来查询可下载的历史版本。对于已下架的应用，此功能特别有用。")
-            }
-
-            // 版本选择区域
             if !availableVersions.isEmpty || showManualInput {
-                Section {
-                    HStack {
-                        Text("选择版本")
-                            .font(.headline)
-                        Spacer()
-                        Button(showManualInput ? "选择版本" : "手动输入") {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                showManualInput.toggle()
-                            }
-                        }
-                        .font(.caption)
-                    }
-
-                    if !showManualInput {
-                        Picker("选择版本", selection: Binding(
-                            get: { self.selectedVersion?.versionId ?? "" },
-                            set: { id in
-                                self.selectedVersion = self.availableVersions.first(where: { $0.versionId == id })
-                            }
-                        )) {
-                            Text("请选择版本").tag("" as String)
-                            ForEach(availableVersions, id: \.versionId) { version in
-                                Text("\(version.versionString) (\(version.releaseDate))")
-                                    .tag(version.versionId)
-                            }
-                        }
-                        .pickerStyle(.menu)
-
-                        if let selectedVersion = selectedVersion {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("版本ID: \(selectedVersion.versionId)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-
-                                if let releaseNotes = selectedVersion.releaseNotes {
-                                    Text("更新内容: \(releaseNotes)")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                        .lineLimit(3)
-                                }
-                            }
-                            .padding(.top, 4)
-                        }
-                    } else {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("手动输入版本ID")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-
-                            TextField("输入版本ID（数字）", text: $manualVersionId)
-                                .keyboardType(.numberPad)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-
-                            Text("版本ID可以从第三方网站或历史版本列表中获取")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                } header: {
-                    Text("版本选择")
-                } footer: {
-                    if !availableVersions.isEmpty {
-                        Text("找到 \(availableVersions.count) 个历史版本")
-                    } else if showManualInput {
-                        Text("手动输入版本ID进行下载")
-                    }
-                }
+                VersionSelectionSection(
+                    availableVersions: $availableVersions,
+                    selectedVersion: $selectedVersion,
+                    manualVersionId: $manualVersionId,
+                    showManualInput: $showManualInput
+                )
             }
 
-            Section {
-                Picker("Account", selection: $selection) {
-                    ForEach(avm.accounts) { account in
-                        Text(account.account.email)
-                            .id(account.id)
-                    }
-                }
-                .pickerStyle(.menu)
-                .onAppear { selection = avm.accounts.first?.id ?? .init() }
-                .redacted(reason: .placeholder, isEnabled: avm.demoMode)
-            } header: {
-                Text("Account")
-            } footer: {
-                Text("Select an account to download this app")
-            }
+            AccountSection(
+                selection: $selection,
+                avm: avm,
+                isDemoMode: avm.demoMode
+            )
 
-            Section {
-                Button(obtainDownloadURL ? "Communicating with Apple..." : "Request Download") {
-                    startDownload()
-                }
-                .disabled(bundleID.isEmpty)
-                .disabled(obtainDownloadURL)
-                .disabled(account == nil)
-            } footer: {
-                if hint.isEmpty {
-                    Text("The package can be installed later from the Downloads page.")
-                } else {
-                    Text(hint)
-                        .foregroundStyle(.red)
-                }
-            }
+            DownloadButtonSection(
+                obtainDownloadURL: $obtainDownloadURL,
+                hint: $hint,
+                bundleID: bundleID,
+                account: account,
+                onStartDownload: startDownload
+            )
         }
         .navigationTitle("Direct Download")
     }
