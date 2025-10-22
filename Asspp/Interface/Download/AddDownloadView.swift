@@ -1,3 +1,4 @@
+
 //
 //  AddDownloadView.swift
 //  Asspp
@@ -268,7 +269,7 @@ struct AddDownloadView: View {
 
     // 查询应用版本
     func fetchAppVersions() {
-        guard let account = account else {
+        guard account != nil else {
             hint = "请先选择账户"
             return
         }
@@ -409,7 +410,7 @@ struct AddDownloadView: View {
                 )
 
                 // 添加到下载管理器并开始下载
-                dvm.add(request: request)
+                _ = dvm.add(request: request)
                 dvm.resume(request: request)
 
                 await MainActor.run {
@@ -451,10 +452,6 @@ struct AddDownloadView: View {
             eventLoopGroupProvider: .singleton,
             configuration: config
         )
-
-        defer {
-            try? client.syncShutdown()
-        }
 
         // 构造请求负载
         var payload: [String: Any] = [
