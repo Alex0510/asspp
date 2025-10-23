@@ -117,19 +117,64 @@ struct AccountView: View {
                     } footer: {
                         Text("Your accounts are saved in your Keychain and will be synced across devices with the same iCloud account signed in.")
                     }
+
+                    // 添加底部填充，为椭圆形标签栏留出空间
+                    Section {} footer: {
+                        Color.clear
+                            .frame(height: 100)
+                    }
                 }
                 .navigationTitle("Accounts")
                 .toolbar {
-                    ToolbarItem {
+                    ToolbarItem(placement: .navigationBarTrailing) {
                         Button {
                             addAccount.toggle()
                         } label: {
-                            Label("Add Account", systemImage: "plus")
+                            ZStack {
+                                // 圆形透明背景
+                                Circle()
+                                    .fill(Color.white.opacity(0.8))
+                                    .frame(width: 36, height: 36)
+
+                                Image(systemName: "plus")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(.primary)
+                            }
                         }
                     }
                 }
             }
-            .sheet(isPresented: $addAccount) { AddAccountView() }
+            // 设置导航栏背景为透明
+            .modifier(NavigationBarTransparentModifier())
+            // iOS 15及以下版本的导航栏透明设置
+            .onAppear {
+                setupNavigationBarAppearance()
+            }
+            .sheet(isPresented: $addAccount) {
+                NavigationView {
+                    AddAccountView()
+                }
+                // 设置添加账户视图的导航栏也为透明
+                .modifier(NavigationBarTransparentModifier())
+                .onAppear {
+                    setupNavigationBarAppearance()
+                }
+            }
+        }
+
+        // 设置导航栏外观（iOS 15及以下版本）
+        private func setupNavigationBarAppearance() {
+            #if os(iOS)
+                let appearance = UINavigationBarAppearance()
+                appearance.configureWithTransparentBackground()
+                appearance.backgroundColor = .clear
+                appearance.backgroundEffect = nil
+                appearance.shadowColor = .clear
+
+                UINavigationBar.appearance().standardAppearance = appearance
+                UINavigationBar.appearance().scrollEdgeAppearance = appearance
+                UINavigationBar.appearance().compactAppearance = appearance
+            #endif
         }
     #endif
 }
