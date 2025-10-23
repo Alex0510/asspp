@@ -21,12 +21,6 @@ struct SettingView: View {
                 formContent
             }
             .navigationViewStyle(.stack)
-            // 设置导航栏背景为透明
-            .modifier(NavigationBarTransparentModifier())
-            // iOS 15及以下版本的导航栏透明设置
-            .onAppear {
-                setupNavigationBarAppearance()
-            }
         #else
             NavigationStack {
                 formContent
@@ -99,7 +93,23 @@ struct SettingView: View {
             #endif
 
             Section {
-                Button("源码作者@Lakr233") {
+                Button("@Lakr233") {
+                    #if canImport(UIKit)
+                        UIApplication.shared.open(URL(string: "https://twitter.com/Lakr233")!)
+                    #endif
+                    #if canImport(AppKit) && !canImport(UIKit)
+                        NSWorkspace.shared.open(URL(string: "https://twitter.com/Lakr233")!)
+                    #endif
+                }
+                Button("Buy me a coffee! ☕️") {
+                    #if canImport(UIKit)
+                        UIApplication.shared.open(URL(string: "https://github.com/sponsors/Lakr233/")!)
+                    #endif
+                    #if canImport(AppKit) && !canImport(UIKit)
+                        NSWorkspace.shared.open(URL(string: "https://github.com/sponsors/Lakr233/")!)
+                    #endif
+                }
+                Button("Feedback & Contact") {
                     #if canImport(UIKit)
                         UIApplication.shared.open(URL(string: "https://github.com/Lakr233/Asspp")!)
                     #endif
@@ -107,29 +117,11 @@ struct SettingView: View {
                         NSWorkspace.shared.open(URL(string: "https://github.com/Lakr233/Asspp")!)
                     #endif
                 }
-                Button("修改作者@Mr.Eric") {
-                    #if canImport(UIKit)
-                        UIApplication.shared.open(URL(string: "http://t.me/Mr_Alex")!)
-                    #endif
-                    #if canImport(AppKit) && !canImport(UIKit)
-                        NSWorkspace.shared.open(URL(string: "http://t.me/Mr_Alex")!)
-                    #endif
-                }
-                Button("TG频道") {
-                    #if canImport(UIKit)
-                        UIApplication.shared.open(URL(string: "https://t.me/+2T-oJk2FFts4NDZl")!)
-                    #endif
-                    #if canImport(AppKit) && !canImport(UIKit)
-                        NSWorkspace.shared.open(URL(string: "https://t.me/+2T-oJk2FFts4NDZl")!)
-                    #endif
-                }
             } header: {
                 Text("About")
             } footer: {
                 Text("Hope this app helps you!")
             }
-
-            // 危险区域移动到内容区域上方，避免与底部椭圆形UI重叠
             Section {
                 Button("Reset", role: .destructive) {
                     try? FileManager.default.removeItem(at: documentsDirectory)
@@ -149,28 +141,7 @@ struct SettingView: View {
             } footer: {
                 Text("This will reset all your settings.")
             }
-
-            // 添加底部填充，为椭圆形标签栏留出空间
-            Section {} footer: {
-                Color.clear
-                    .frame(height: 50)
-            }
         }
         .navigationTitle("Settings")
-    }
-
-    // 设置导航栏外观（iOS 15及以下版本）
-    private func setupNavigationBarAppearance() {
-        #if os(iOS)
-            let appearance = UINavigationBarAppearance()
-            appearance.configureWithTransparentBackground()
-            appearance.backgroundColor = .clear
-            appearance.backgroundEffect = nil
-            appearance.shadowColor = .clear
-
-            UINavigationBar.appearance().standardAppearance = appearance
-            UINavigationBar.appearance().scrollEdgeAppearance = appearance
-            UINavigationBar.appearance().compactAppearance = appearance
-        #endif
     }
 }

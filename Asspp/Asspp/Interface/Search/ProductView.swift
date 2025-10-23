@@ -70,12 +70,6 @@ struct ProductView: View {
                 }
             }
             pricing
-
-            // 添加底部填充，为椭圆形标签栏留出空间
-            Section {} footer: {
-                Color.clear
-                    .frame(height: 50)
-            }
         }
         .onAppear {
             selection = eligibleAccounts.first?.id ?? .init()

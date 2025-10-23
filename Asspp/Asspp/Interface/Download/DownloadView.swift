@@ -17,12 +17,6 @@ struct DownloadView: View {
                     .navigationTitle("Downloads")
             }
             .navigationViewStyle(.stack)
-            // 设置导航栏背景为透明
-            .modifier(NavigationBarTransparentModifier())
-            // iOS 15及以下版本的导航栏透明设置
-            .onAppear {
-                setupNavigationBarAppearance()
-            }
         #else
             NavigationStack {
                 content
@@ -38,27 +32,10 @@ struct DownloadView: View {
             } else {
                 packageList
             }
-
-            // 添加底部填充，为椭圆形标签栏留出空间
-            Section {} footer: {
-                Color.clear
-                    .frame(height: 60)
-            }
         }
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                NavigationLink(destination: AddDownloadView()) {
-                    ZStack {
-                        // 圆形透明背景
-                        Circle()
-                            .fill(Color.white.opacity(0.8))
-                            .frame(width: 36, height: 36)
-
-                        Image(systemName: "plus")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.primary)
-                    }
-                }
+            NavigationLink(destination: AddDownloadView()) {
+                Image(systemName: "plus")
             }
         }
     }
@@ -91,21 +68,6 @@ struct DownloadView: View {
                 }
             }
         }
-    }
-
-    // 设置导航栏外观（iOS 15及以下版本）
-    private func setupNavigationBarAppearance() {
-        #if os(iOS)
-            let appearance = UINavigationBarAppearance()
-            appearance.configureWithTransparentBackground()
-            appearance.backgroundColor = .clear
-            appearance.backgroundEffect = nil
-            appearance.shadowColor = .clear
-
-            UINavigationBar.appearance().standardAppearance = appearance
-            UINavigationBar.appearance().scrollEdgeAppearance = appearance
-            UINavigationBar.appearance().compactAppearance = appearance
-        #endif
     }
 }
 
