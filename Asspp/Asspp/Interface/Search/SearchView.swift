@@ -164,6 +164,12 @@ struct SearchView: View {
                 }
                 .transition(.opacity)
             }
+
+            // 添加底部填充，为椭圆形标签栏留出空间
+            Section {} footer: {
+                Color.clear
+                    .frame(height: 30)
+            }
         }
         .animation(.spring, value: searchResult)
     }
