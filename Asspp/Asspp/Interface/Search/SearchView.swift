@@ -48,11 +48,30 @@ struct SearchView: View {
                 NavigationView {
                     legacyContent
                 }
+                // iOS 15及以下版本的导航栏透明设置
+                .onAppear {
+                    setupNavigationBarAppearance()
+                }
             }
         #else
             NavigationStack {
                 legacyContent
             }
+        #endif
+    }
+
+    // 设置导航栏外观（iOS 15及以下版本）
+    private func setupNavigationBarAppearance() {
+        #if os(iOS)
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithTransparentBackground()
+            appearance.backgroundColor = .clear
+            appearance.backgroundEffect = nil
+            appearance.shadowColor = .clear
+
+            UINavigationBar.appearance().standardAppearance = appearance
+            UINavigationBar.appearance().scrollEdgeAppearance = appearance
+            UINavigationBar.appearance().compactAppearance = appearance
         #endif
     }
 
@@ -201,6 +220,21 @@ extension SearchView {
             .onSubmit(of: .search) { search() }
             .navigationTitle("Search - \(searchRegion.uppercased())")
             .toolbar { tools }
+            // iOS 16+ 使用新API设置透明导航栏
+            .modifier(NavigationBarTransparentModifier())
+    }
+}
+
+// MARK: - 导航栏透明修饰符
+
+struct NavigationBarTransparentModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content
+                .toolbarBackground(.hidden, for: .navigationBar)
+        } else {
+            content
+        }
     }
 }
 
@@ -220,6 +254,8 @@ extension SearchView {
                         tools
                     }
                 }
+                // iOS 16+ 使用新API设置透明导航栏
+                .toolbarBackground(.hidden, for: .navigationBar)
                 .safeAreaBar(edge: .top) {
                     if navigationBarVisibility == .hidden {
                         HStack {
