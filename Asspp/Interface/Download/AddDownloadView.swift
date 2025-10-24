@@ -1,4 +1,3 @@
-
 //
 //  AddDownloadView.swift
 //  Asspp
@@ -19,6 +18,7 @@ struct BundleIDSection: View {
     @Binding var isLoadingVersions: Bool
     let onFetchVersions: () -> Void
     let isAccountAvailable: Bool
+    let isDemoMode: Bool
 
     @FocusState var searchKeyFocused: Bool
 
@@ -51,7 +51,7 @@ struct BundleIDSection: View {
                         Text("查询历史版本")
                     }
                 }
-                .disabled(bundleID.isEmpty || isLoadingVersions || !isAccountAvailable)
+                .disabled(bundleID.isEmpty || isLoadingVersions || (!isAccountAvailable && !isDemoMode))
                 .buttonStyle(.borderedProminent)
                 Spacer()
             }
@@ -167,7 +167,6 @@ struct AccountSection: View {
                 }
             }
             .pickerStyle(.menu)
-            .onAppear { selection = avm.accounts.first?.id ?? .init() }
             #if os(iOS)
                 .redacted(reason: .placeholder, isEnabled: isDemoMode)
             #else
@@ -186,6 +185,7 @@ struct DownloadButtonSection: View {
     @Binding var hint: String
     let bundleID: String
     let account: AppStore.UserAccount?
+    let isDemoMode: Bool
     let onStartDownload: () -> Void
 
     var body: some View {
@@ -193,7 +193,7 @@ struct DownloadButtonSection: View {
             Button(obtainDownloadURL ? "Communicating with Apple..." : "Request Download") {
                 onStartDownload()
             }
-            .disabled(bundleID.isEmpty || obtainDownloadURL || account == nil)
+            .disabled(bundleID.isEmpty || obtainDownloadURL || (account == nil && !isDemoMode))
         } footer: {
             if hint.isEmpty {
                 Text("The package can be installed later from the Downloads page.")
@@ -238,6 +238,7 @@ struct AddDownloadView: View {
                 isLoadingVersions: $isLoadingVersions,
                 onFetchVersions: fetchAppVersions,
                 isAccountAvailable: account != nil,
+                isDemoMode: avm.demoMode,
                 searchKeyFocused: _searchKeyFocused
             )
 
@@ -261,22 +262,43 @@ struct AddDownloadView: View {
                 hint: $hint,
                 bundleID: bundleID,
                 account: account,
+                isDemoMode: avm.demoMode,
                 onStartDownload: startDownload
             )
+
+            // 添加底部填充，为椭圆形标签栏留出空间
+            Section {} footer: {
+                Color.clear
+                    .frame(height: 100)
+            }
         }
         .navigationTitle("Direct Download")
+        .onAppear {
+            // 确保有账户被选中
+            if selection == .init(), let firstAccount = avm.accounts.first {
+                selection = firstAccount.id
+            }
+        }
     }
 
     // 查询应用版本
     func fetchAppVersions() {
-        guard account != nil else {
-            hint = "请先选择账户"
-            return
-        }
+        // 在演示模式下允许查询版本，即使没有账户
+        if avm.demoMode {
+            guard !bundleID.isEmpty else {
+                hint = "请输入Bundle ID"
+                return
+            }
+        } else {
+            guard account != nil else {
+                hint = "请先选择账户"
+                return
+            }
 
-        guard !bundleID.isEmpty else {
-            hint = "请输入Bundle ID"
-            return
+            guard !bundleID.isEmpty else {
+                hint = "请输入Bundle ID"
+                return
+            }
         }
 
         searchKeyFocused = false
@@ -298,9 +320,8 @@ struct AddDownloadView: View {
 
                     if versions.isEmpty {
                         self.hint = "未找到该应用的历史版本，请检查Bundle ID是否正确或尝试手动输入版本ID"
-                    } else {
-                        self.hint = "找到 \(versions.count) 个历史版本"
                     }
+                    // 移除了成功找到版本时的提示
                 }
             } catch {
                 await MainActor.run {
@@ -353,9 +374,15 @@ struct AddDownloadView: View {
 
     // 直接使用软件ID和版本ID进行下载请求
     func startDownload() {
-        guard let account else { return }
+        // 确保有有效的账户
+        guard let account = account else {
+            hint = "请先选择有效的账户"
+            return
+        }
+
         searchKeyFocused = false
         obtainDownloadURL = true
+        hint = ""
 
         Task {
             do {
@@ -415,13 +442,13 @@ struct AddDownloadView: View {
 
                 await MainActor.run {
                     obtainDownloadURL = false
-                    hint = "Download Requested and Started"
+                    hint = "下载请求已提交并开始下载"
                     dismiss()
                 }
             } catch {
                 await MainActor.run {
                     obtainDownloadURL = false
-                    hint = "Unable to retrieve download url, please try again later." + "\n" + error.localizedDescription
+                    hint = "无法获取下载URL，请稍后重试。" + "\n" + error.localizedDescription
                 }
             }
         }
@@ -452,6 +479,13 @@ struct AddDownloadView: View {
             eventLoopGroupProvider: .singleton,
             configuration: config
         )
+
+        defer {
+            // 修复警告：使用异步关闭
+            Task {
+                try? await client.shutdown()
+            }
+        }
 
         // 构造请求负载
         var payload: [String: Any] = [
