@@ -45,32 +45,7 @@ struct DownloadView: View {
                     .frame(height: 60)
             }
         }
-        #if os(iOS)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                NavigationLink(destination: AddDownloadView()) {
-                    ZStack {
-                        // 圆形透明背景
-                        Circle()
-                            .fill(Color.white.opacity(0.8))
-                            .frame(width: 36, height: 36)
-
-                        Image(systemName: "plus")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.primary)
-                    }
-                }
-            }
-        }
-        #else
-        .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
-                        NavigationLink(destination: AddDownloadView()) {
-                            Image(systemName: "plus")
-                        }
-                    }
-                }
-        #endif
+        .modifier(ToolbarModifier())
     }
 
     var packageList: some View {
@@ -115,6 +90,40 @@ struct DownloadView: View {
             UINavigationBar.appearance().standardAppearance = appearance
             UINavigationBar.appearance().scrollEdgeAppearance = appearance
             UINavigationBar.appearance().compactAppearance = appearance
+        #endif
+    }
+}
+
+// MARK: - Toolbar Modifier for Platform Compatibility
+struct ToolbarModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        #if os(iOS)
+        content
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink(destination: AddDownloadView()) {
+                        ZStack {
+                            // 圆形透明背景
+                            Circle()
+                                .fill(Color.white.opacity(0.8))
+                                .frame(width: 36, height: 36)
+
+                            Image(systemName: "plus")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.primary)
+                        }
+                    }
+                }
+            }
+        #else
+        content
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    NavigationLink(destination: AddDownloadView()) {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
         #endif
     }
 }
