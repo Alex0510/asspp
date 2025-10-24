@@ -257,7 +257,9 @@ struct NavigationBarTransparentModifier: ViewModifier {
             content
                 .searchable(text: $searchKey, placement: searchablePlacement, prompt: "Keyword")
                 .onSubmit(of: .search) { search() }
+                #if os(iOS)
                 .toolbarVisibility(navigationBarVisibility, for: .navigationBar)
+                #endif
                 .navigationTitle(Text("Search - \(searchRegion.uppercased())"))
                 .toolbar {
                     if navigationBarVisibility != .hidden {
@@ -265,7 +267,9 @@ struct NavigationBarTransparentModifier: ViewModifier {
                     }
                 }
                 // iOS 16+ 使用新API设置透明导航栏
+                #if os(iOS)
                 .toolbarBackground(.hidden, for: .navigationBar)
+                #endif
                 .safeAreaBar(edge: .top) {
                     if navigationBarVisibility == .hidden {
                         HStack {
