@@ -2,6 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "@Lakr233" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -58,6 +59,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ - %@"
+          }
+        }
+      }
+    },
+    "%@ (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ (%2$@)"
           }
         }
       }
@@ -459,6 +470,7 @@
       }
     },
     "Buy me a coffee! ☕️" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -943,6 +955,7 @@
       }
     },
     "Feedback & Contact" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2112,6 +2125,7 @@
       }
     },
     "Tell us the bundle ID of the app to initiate a direct download. Useful to download apps that are no longer available in App Store." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2126,6 +2140,9 @@
           }
         }
       }
+    },
+    "TG频道" : {
+
     },
     "The package can be installed later from the Downloads page." : {
       "localizations" : {
@@ -2390,6 +2407,69 @@
           }
         }
       }
+    },
+    "下载" : {
+
+    },
+    "主页" : {
+
+    },
+    "修改作者@Mr.Eric" : {
+
+    },
+    "手动输入" : {
+
+    },
+    "手动输入版本ID" : {
+
+    },
+    "手动输入版本ID进行下载" : {
+
+    },
+    "找到 %lld 个历史版本" : {
+
+    },
+    "搜索" : {
+
+    },
+    "更新内容: %@" : {
+
+    },
+    "查询中..." : {
+
+    },
+    "查询历史版本" : {
+
+    },
+    "源码作者@Lakr233" : {
+
+    },
+    "版本ID: %@" : {
+
+    },
+    "版本ID可以从第三方网站或历史版本列表中获取" : {
+
+    },
+    "版本选择" : {
+
+    },
+    "设置" : {
+
+    },
+    "请选择版本" : {
+
+    },
+    "账户" : {
+
+    },
+    "输入应用的Bundle ID来查询可下载的历史版本。对于已下架的应用，此功能特别有用。" : {
+
+    },
+    "输入版本ID（数字）" : {
+
+    },
+    "选择版本" : {
+
     }
   },
   "version" : "1.1"
