@@ -135,20 +135,29 @@ struct SearchView: View {
 
     @ToolbarContentBuilder
     var tools: some ToolbarContent {
+        #if os(iOS)
         ToolbarItem(placement: .automatic) {
             Menu {
                 searchTypePicker
                     .pickerStyle(.menu)
                 Divider()
-                #if os(iOS)
-                    searchRegionView()
-                #else
-                    searchRegionView(isAllRegionsWrappedInMenu: false)
-                #endif
+                searchRegionView()
             } label: {
                 Image(systemName: "ellipsis.circle")
             }
         }
+        #else
+        ToolbarItem(placement: .primaryAction) {
+            Menu {
+                searchTypePicker
+                    .pickerStyle(.menu)
+                Divider()
+                searchRegionView(isAllRegionsWrappedInMenu: false)
+            } label: {
+                Image(systemName: "ellipsis.circle")
+            }
+        }
+        #endif
     }
 
     var content: some View {
@@ -227,7 +236,9 @@ extension SearchView {
             .navigationTitle("Search - \(searchRegion.uppercased())")
             .toolbar { tools }
             // iOS 16+ 使用新API设置透明导航栏
+            #if os(iOS)
             .modifier(NavigationBarTransparentModifier())
+            #endif
     }
 }
 
@@ -235,12 +246,16 @@ extension SearchView {
 
 struct NavigationBarTransparentModifier: ViewModifier {
     func body(content: Content) -> some View {
-        if #available(iOS 16.0, *) {
+        #if os(iOS)
+            if #available(iOS 16.0, *) {
+                content
+                    .toolbarBackground(.hidden, for: .navigationBar)
+            } else {
+                content
+            }
+        #else
             content
-                .toolbarBackground(.hidden, for: .navigationBar)
-        } else {
-            content
-        }
+        #endif
     }
 }
 
@@ -260,7 +275,6 @@ struct NavigationBarTransparentModifier: ViewModifier {
                         tools
                     }
                 }
-                // iOS 16+ 使用新API设置透明导航栏
                 .toolbarBackground(.hidden, for: .navigationBar)
                 .safeAreaBar(edge: .top) {
                     if navigationBarVisibility == .hidden {
