@@ -136,27 +136,27 @@ struct SearchView: View {
     @ToolbarContentBuilder
     var tools: some ToolbarContent {
         #if os(iOS)
-        ToolbarItem(placement: .automatic) {
-            Menu {
-                searchTypePicker
-                    .pickerStyle(.menu)
-                Divider()
-                searchRegionView()
-            } label: {
-                Image(systemName: "ellipsis.circle")
+            ToolbarItem(placement: .automatic) {
+                Menu {
+                    searchTypePicker
+                        .pickerStyle(.menu)
+                    Divider()
+                    searchRegionView()
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
             }
-        }
         #else
-        ToolbarItem(placement: .primaryAction) {
-            Menu {
-                searchTypePicker
-                    .pickerStyle(.menu)
-                Divider()
-                searchRegionView(isAllRegionsWrappedInMenu: false)
-            } label: {
-                Image(systemName: "ellipsis.circle")
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    searchTypePicker
+                        .pickerStyle(.menu)
+                    Divider()
+                    searchRegionView(isAllRegionsWrappedInMenu: false)
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
             }
-        }
         #endif
     }
 
@@ -235,10 +235,10 @@ extension SearchView {
             .onSubmit(of: .search) { search() }
             .navigationTitle("Search - \(searchRegion.uppercased())")
             .toolbar { tools }
-            // iOS 16+ 使用新API设置透明导航栏
-            #if os(iOS)
+        // iOS 16+ 使用新API设置透明导航栏
+        #if os(iOS)
             .modifier(NavigationBarTransparentModifier())
-            #endif
+        #endif
     }
 }
 
