@@ -2141,9 +2141,6 @@
         }
       }
     },
-    "TG频道" : {
-
-    },
     "The package can be installed later from the Downloads page." : {
       "localizations" : {
         "en" : {
@@ -2439,6 +2436,9 @@
 
     },
     "查询历史版本" : {
+
+    },
+    "欢迎加入TG频道" : {
 
     },
     "源码作者@Lakr233" : {

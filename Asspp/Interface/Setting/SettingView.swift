@@ -115,7 +115,7 @@ struct SettingView: View {
                         NSWorkspace.shared.open(URL(string: "http://t.me/Mr_Alex")!)
                     #endif
                 }
-                Button("TG频道") {
+                Button("欢迎加入TG频道") {
                     #if canImport(UIKit)
                         UIApplication.shared.open(URL(string: "https://t.me/+2T-oJk2FFts4NDZl")!)
                     #endif
