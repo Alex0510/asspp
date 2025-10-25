@@ -30,8 +30,8 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AssppPro.ipa
-          path: AssppPro.ipa
+          name: Asspp.ipa
+          path: Asspp.ipa
 
   build-osx:
     runs-on: macos-26
