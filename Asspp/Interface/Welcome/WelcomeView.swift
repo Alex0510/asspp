@@ -11,6 +11,7 @@ import SwiftUI
 struct WelcomeView: View {
     @State var openInstruction: Bool = false
     @Environment(\.verticalSizeClass) var verticalSizeClass
+    @AppStorage("appearanceMode") private var appearanceMode = "system"
 
     var body: some View {
         ZStack {
@@ -27,6 +28,7 @@ struct WelcomeView: View {
 
                     Text("Welcome to Asspp")
                         .font(.system(.headline, design: .rounded))
+                        .foregroundColor(.primary)
                 }
 
                 // 中间空间 - 确保内容在中间
@@ -36,10 +38,12 @@ struct WelcomeView: View {
                 VStack(spacing: 16) {
                     HStack(spacing: 8) {
                         Text(version)
+                            .foregroundColor(.primary)
                         Button {
                             openInstruction = true
                         } label: {
                             Image(systemName: "questionmark.circle")
+                                .foregroundColor(.primary)
                         }
                         .buttonStyle(.borderless)
                         .popover(isPresented: $openInstruction) {
@@ -48,9 +52,9 @@ struct WelcomeView: View {
                         }
                     }
                     Text("App Store itself is unstable, retry if needed.")
+                        .foregroundColor(.secondary)
                 }
                 .font(.footnote)
-                .foregroundStyle(.secondary)
                 .padding(.bottom, bottomPadding) // 根据设备类型调整底部间距
             }
             .padding()

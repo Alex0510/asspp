@@ -14,6 +14,7 @@ import SwiftUI
 
 struct SettingView: View {
     @StateObject var vm = AppStore.this
+    @AppStorage("appearanceMode") private var appearanceMode = "system"
 
     var body: some View {
         #if os(iOS)
@@ -43,6 +44,21 @@ struct SettingView: View {
             } footer: {
                 Text("By enabling this, all your accounts and sensitive information will be redacted.")
             }
+
+            // 新增：外观模式设置
+            Section {
+                Picker("外观模式", selection: $appearanceMode) {
+                    Text("系统").tag("system")
+                    Text("浅色").tag("light")
+                    Text("深色").tag("dark")
+                }
+                .pickerStyle(SegmentedPickerStyle())
+            } header: {
+                Text("外观")
+            } footer: {
+                Text("选择应用的显示模式")
+            }
+
             Section {
                 Button("Delete All Downloads", role: .destructive) {
                     Downloads.this.removeAll()
@@ -157,6 +173,8 @@ struct SettingView: View {
             }
         }
         .navigationTitle("Settings")
+        // 应用外观模式
+        .preferredColorScheme(appearanceMode == "system" ? nil : (appearanceMode == "light" ? .light : .dark))
     }
 
     // 设置导航栏外观（iOS 15及以下版本）

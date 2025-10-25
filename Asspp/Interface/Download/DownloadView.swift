@@ -9,6 +9,7 @@ import SwiftUI
 
 struct DownloadView: View {
     @StateObject var vm = Downloads.this
+    @AppStorage("appearanceMode") private var appearanceMode = "system"
 
     var body: some View {
         #if os(iOS)
@@ -35,6 +36,7 @@ struct DownloadView: View {
         FormOnTahoeList {
             if vm.manifests.isEmpty {
                 Text("No downloads yet.")
+                    .foregroundColor(.primary)
             } else {
                 packageList
             }
@@ -59,11 +61,12 @@ struct DownloadView: View {
                         .animation(.interactiveSpring, value: req.state.percent)
                     HStack {
                         Text(req.hint)
+                            .foregroundColor(.primary)
                         Spacer()
                         Text(req.creation.formatted())
+                            .foregroundColor(.secondary)
                     }
                     .font(.system(.footnote, design: .rounded))
-                    .foregroundStyle(.secondary)
                 }
             }
             .contextMenu {

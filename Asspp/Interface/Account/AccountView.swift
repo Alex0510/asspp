@@ -13,6 +13,7 @@ struct AccountView: View {
     @StateObject private var vm = AppStore.this
     @State private var addAccount = false
     @State private var selectedID: AppStore.UserAccount.ID?
+    @AppStorage("appearanceMode") private var appearanceMode = "system"
 
     var body: some View {
         #if os(macOS)
@@ -43,15 +44,18 @@ struct AccountView: View {
                     NavigationLink(value: account.id) {
                         Text(account.account.email)
                             .redacted(reason: .placeholder, isEnabled: vm.demoMode)
+                            .foregroundColor(.primary)
                     }
                 }
 
                 TableColumn("Region") { account in
                     Text(account.account.store)
+                        .foregroundColor(.primary)
                 }
 
                 TableColumn("Storefront") { account in
                     Text(ApplePackage.Configuration.countryCode(for: account.account.store) ?? "-")
+                        .foregroundColor(.primary)
                 }
             }
             .navigationDestination(for: AppStore.UserAccount.ID.self) { id in
@@ -80,6 +84,7 @@ struct AccountView: View {
             HStack(spacing: 12) {
                 Image(systemName: "lock.shield")
                     .font(.title3)
+                    .foregroundColor(.primary)
                 Text("Accounts are stored securely in your Keychain and can be removed at any time from the detail view.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -93,6 +98,7 @@ struct AccountView: View {
                     addAccount.toggle()
                 } label: {
                     Label("Add Account", systemImage: "plus")
+                        .foregroundColor(.primary)
                 }
             }
         }
@@ -107,10 +113,12 @@ struct AccountView: View {
                             NavigationLink(destination: AccountDetailView(accountId: account.id)) {
                                 Text(account.account.email)
                                     .redacted(reason: .placeholder, isEnabled: vm.demoMode)
+                                    .foregroundColor(.primary)
                             }
                         }
                         if vm.accounts.isEmpty {
                             Text("No accounts yet.")
+                                .foregroundColor(.primary)
                         }
                     } header: {
                         Text("Apple IDs")

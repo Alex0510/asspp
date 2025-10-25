@@ -14,6 +14,7 @@ struct SearchView: View {
     @AppStorage("searchRegion") var searchRegion = "US"
     @FocusState var searchKeyFocused
     @State var searchType = EntityType.iPhone
+    @AppStorage("appearanceMode") private var appearanceMode = "system"
 
     @State var searching = false
     let regionKeys = Array(ApplePackage.Configuration.storeFrontValues.keys.sorted())
@@ -144,6 +145,7 @@ struct SearchView: View {
                     searchRegionView()
                 } label: {
                     Image(systemName: "ellipsis.circle")
+                        .foregroundColor(.primary)
                 }
             }
         #else
@@ -155,6 +157,7 @@ struct SearchView: View {
                     searchRegionView(isAllRegionsWrappedInMenu: false)
                 } label: {
                     Image(systemName: "ellipsis.circle")
+                        .foregroundColor(.primary)
                 }
             }
         #endif

@@ -8,14 +8,19 @@
 import SwiftUI
 
 struct MainView: View {
+    @AppStorage("appearanceMode") private var appearanceMode = "system"
+
     var body: some View {
         #if os(macOS)
             MacSidebarMainView()
+                .preferredColorScheme(appearanceMode == "system" ? nil : (appearanceMode == "light" ? .light : .dark))
         #else
             if #available(iOS 19.0, *) {
                 NewMainView()
+                    .preferredColorScheme(appearanceMode == "system" ? nil : (appearanceMode == "light" ? .light : .dark))
             } else {
                 CustomGlassTabMainView()
+                    .preferredColorScheme(appearanceMode == "system" ? nil : (appearanceMode == "light" ? .light : .dark))
             }
         #endif
     }
@@ -130,6 +135,7 @@ struct MainView: View {
         @State private var selectedTab: Tab = .home
         @State private var dragOffset: CGFloat = 0
         @State private var isDragging = false
+        @AppStorage("appearanceMode") private var appearanceMode = "system"
 
         enum Tab: Int, CaseIterable {
             case home, accounts, search, downloads, settings
@@ -257,7 +263,6 @@ struct MainView: View {
             }
             .edgesIgnoringSafeArea(.bottom)
             .statusBar(hidden: false)
-            .preferredColorScheme(.light)
         }
 
         private func calculateDragPosition() -> CGFloat {
@@ -280,10 +285,10 @@ struct MainView: View {
                 ZStack {
                     // 白色椭圆形背景 - 选中状态
                     if isSelected {
-                        RoundedRectangle(cornerRadius: 20)
+                        RoundedRectangle(cornerRadius: 28)
                             .fill(Color.white.opacity(0.8)) // 白色背景
                             .overlay(
-                                RoundedRectangle(cornerRadius: 20)
+                                RoundedRectangle(cornerRadius: 28)
                                     .stroke(Color.white.opacity(0.8), lineWidth: 2) // 白色边框
                             )
                             .frame(width: 65, height: 45)
@@ -336,6 +341,7 @@ struct MainView: View {
     @available(iOS 19.0, *)
     struct NewMainView: View {
         @StateObject var dvm = Downloads.this
+        @AppStorage("appearanceMode") private var appearanceMode = "system"
 
         var body: some View {
             TabView {
