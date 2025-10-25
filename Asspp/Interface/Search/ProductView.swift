@@ -54,49 +54,59 @@ struct ProductView: View {
     }
 
     var body: some View {
-        FormOnTahoeList {
-            accountSelector
-            buttons
-            packageHeader
-            packageDescription
-            if account == nil {
-                Section {
-                    Text("No account available for this region.")
-                        .foregroundStyle(.red)
-                } header: {
-                    Text("Error")
-                } footer: {
-                    Text("Please add an account in the Accounts page.")
+        if #available(iOS 16.0, *) {
+            FormOnTahoeList {
+                accountSelector
+                buttons
+                packageHeader
+                packageDescription
+                if account == nil {
+                    Section {
+                        Text("No account available for this region.")
+                            .foregroundStyle(.red)
+                    } header: {
+                        Text("Error")
+                    } footer: {
+                        Text("Please add an account in the Accounts page.")
+                    }
+                }
+                pricing
+
+                // 添加底部填充，为椭圆形标签栏留出空间
+                Section {} footer: {
+                    Color.clear
+                        .frame(height: 50)
                 }
             }
-            pricing
-
-            // 添加底部填充，为椭圆形标签栏留出空间
-            Section {} footer: {
-                Color.clear
-                    .frame(height: 50)
+            .onAppear {
+                selection = eligibleAccounts.first?.id ?? .init()
             }
+            .navigationTitle("Select Account")
+            .alert("License Required", isPresented: $showLicenseAlert) {
+                var confirmRole: ButtonRole?
+                #if compiler(>=6.2)
+                    if #available(iOS 26.0, macOS 26.0, *) {
+                        confirmRole = .confirm
+                    }
+                #endif
+
+                return Group {
+                    Button("Acquire License", role: confirmRole) {
+                        acquireLicense()
+                    }
+
+                    Button("Cancel", role: .cancel) {}
+                }
+            } message: {}
+            // 添加 navigationDestination 来处理导航
+            .navigationDestination(isPresented: $showDownloadPage) {
+                if let req = dvm.downloadRequest(forArchive: archive.package) {
+                    PackageView(pkg: req)
+                }
+            }
+        } else {
+            // Fallback on earlier versions
         }
-        .onAppear {
-            selection = eligibleAccounts.first?.id ?? .init()
-        }
-        .navigationTitle("Select Account")
-        .alert("License Required", isPresented: $showLicenseAlert) {
-            var confirmRole: ButtonRole?
-            #if compiler(>=6.2)
-                if #available(iOS 26.0, macOS 26.0, *) {
-                    confirmRole = .confirm
-                }
-            #endif
-
-            return Group {
-                Button("Acquire License", role: confirmRole) {
-                    acquireLicense()
-                }
-
-                Button("Cancel", role: .cancel) {}
-            }
-        } message: {}
     }
 
     var packageHeader: some View {
@@ -175,13 +185,10 @@ struct ProductView: View {
 
     var buttons: some View {
         Section {
-            if let req = dvm.downloadRequest(forArchive: archive.package) {
-                // We intentionally don't use `navigationDestination(isPresented:destination:)` here on iOS 16+ & macOS 13+.
-                // To use it, we'd need to move the modifier out of this List and onto the enclosing `NavigationStack`,
-                // which would require intrusive changes at the root. If we drop the auto-show-on-download behaviour though,
-                // adopting `navigationDestination` would be feasible.
-                NavigationLink(destination: PackageView(pkg: req), isActive: $showDownloadPage) {
-                    Text("Show Download")
+            if dvm.downloadRequest(forArchive: archive.package) != nil {
+                // 使用新的导航API
+                Button("Show Download") {
+                    showDownloadPage = true
                 }
             } else {
                 Button(obtainDownloadURL ? "Communicating with Apple..." : "Request Download") {
