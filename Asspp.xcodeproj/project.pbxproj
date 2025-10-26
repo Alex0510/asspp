@@ -395,7 +395,7 @@
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Asspp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Asspp;
+				INFOPLIST_KEY_CFBundleDisplayName = AssppPro;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Asspp requires this permission to communicate with install service on your device.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -450,7 +450,7 @@
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Asspp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Asspp;
+				INFOPLIST_KEY_CFBundleDisplayName = AssppPro;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Asspp requires this permission to communicate with install service on your device.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
