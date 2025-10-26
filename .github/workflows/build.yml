@@ -25,13 +25,13 @@ jobs:
       - name: Build
         run: |
           chmod +x Resources/Scripts/compile.release.mobile.ci.sh
-          ./Resources/Scripts/compile.release.mobile.ci.sh "$(pwd)" "$(pwd)/Asspp.ipa"
+          ./Resources/Scripts/compile.release.mobile.ci.sh "$(pwd)" "$(pwd)/AssppPro.ipa"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Asspp.ipa
-          path: Asspp.ipa
+          name: AssppPro.ipa
+          path: AssppPro.ipa
 
   build-osx:
     runs-on: macos-26
